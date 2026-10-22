@@ -25,6 +25,11 @@ export default function HomeScreen() {
           <Text className="font-semibold text-primary-foreground">Mở Bạn bè</Text>
         </Pressable>
       </Link>
+      <Link href="/leaderboard" asChild>
+        <Pressable className="mt-2 rounded-lg bg-secondary px-5 py-3">
+          <Text className="font-semibold text-secondary-foreground">🏆 Bảng xếp hạng</Text>
+        </Pressable>
+      </Link>
     </View>
   );
 }
