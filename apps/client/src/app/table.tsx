@@ -107,6 +107,7 @@ export default function TableScreen() {
 
   const seats = state?.seats ?? [];
   const selfSeat = seats.find((seat) => seat.userId === user?.id);
+  const canManageBots = state?.ownerId === user?.id || user?.role === 'admin';
   const others = seats.filter((seat) => seat.userId !== user?.id);
 
   // The viewer always sits at the bottom; everyone else spreads across the top.
@@ -222,7 +223,7 @@ export default function TableScreen() {
                   dealIndex={index}
                   buttonSeat={state?.buttonSeat ?? null}
                   clockRemaining={seat.isActing ? clockRemaining : undefined}
-                  onAddBot={() => setAddingToSeat(seat.seat)}
+                  onAddBot={canManageBots ? () => setAddingToSeat(seat.seat) : undefined}
                 />
               ))}
             </View>
@@ -246,7 +247,7 @@ export default function TableScreen() {
                   dealIndex={topSeats.length + index}
                   buttonSeat={state?.buttonSeat ?? null}
                   clockRemaining={seat.isActing ? clockRemaining : undefined}
-                  onAddBot={() => setAddingToSeat(seat.seat)}
+                  onAddBot={canManageBots ? () => setAddingToSeat(seat.seat) : undefined}
                 />
               ))}
 

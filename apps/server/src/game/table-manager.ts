@@ -114,6 +114,8 @@ export class Table {
     seat.userId = null;
     seat.displayName = null;
     seat.stack = 0;
+    if (this.startHandIfReady()) return refund;
+
     this.sequence += 1;
     this.emitChange();
     return refund;
@@ -560,6 +562,7 @@ export class Table {
 
     return {
       tableId: this.id,
+      ownerId: this.doc.ownerId?.toHexString() ?? null,
       handId: hand?.handId ?? null,
       handNumber: hand ? this.doc.handNumber : null,
       street: hand?.street ?? null,
