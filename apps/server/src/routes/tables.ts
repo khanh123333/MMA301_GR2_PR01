@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import {
   addBotBodySchema,
   canModerate,
+  createTableBodySchema,
   joinTableBodySchema,
   setAutoFillBodySchema,
   type TableHand,
@@ -110,6 +111,40 @@ function toTableHand(doc: HandDoc): TableHand {
 export async function tableRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.requireAuth);
 
+  app.post('/', async (request, reply) => {
+    const ownerId = request.claims?.sub;
+    if (!ownerId || !canModerate(request.claims?.role)) {
+      throw AppError.forbidden('Only moderators can open tables');
+    }
+
+    const body = createTableBodySchema.parse(request.body);
+    const now = new Date();
+    const doc: PokerTableDoc = {
+      _id: new ObjectId(),
+      name: body.name,
+      ownerId: new ObjectId(ownerId),
+      maxSeats: body.maxSeats,
+      smallBlind: body.smallBlind,
+      bigBlind: body.bigBlind,
+      minBuyIn: body.minBuyIn,
+      maxBuyIn: body.maxBuyIn,
+      isPrivate: body.isPrivate,
+      joinCode: null,
+      status: 'open',
+      seats: emptySeats(body.maxSeats),
+      handNumber: 0,
+      buttonSeat: 0,
+      autoDeal: false,
+      autoFillBots: false,
+      autoFillDifficulty: 'medium',
+      createdAt: now,
+    };
+
+    await pokerTables().insertOne(doc);
+    reply.status(201);
+    return { ok: true as const, data: toSummary(doc) };
+  });
+
   app.get('/', async () => {
     const docs = await pokerTables()
       .find({ status: { $ne: 'closed' }, isPrivate: false })
@@ -119,10 +154,6 @@ export async function tableRoutes(app: FastifyInstance) {
 
     return { ok: true as const, data: { items: docs.map(toSummary), nextCursor: null } };
   });
-
-  // Creating a table moved to POST /api/v1/moderation/tables. Players do not
-  // open tables any more, so the lobby stays a curated set rather than
-  // whatever anyone happened to make.
 
   app.get('/:id', async (request) => {
     const { id } = request.params as { id: string };
@@ -218,11 +249,7 @@ export async function tableRoutes(app: FastifyInstance) {
     const seat = table.table.seats.find((entry) => entry.userId?.equals(userId));
     if (!seat) throw AppError.badRequest('You are not seated at this table');
 
-    const refund = seat.stack;
-
-    seat.userId = null;
-    seat.displayName = null;
-    seat.stack = 0;
+    const refund = table.leave(claim);
 
     await pokerTables().updateOne(
       { _id: table.table._id, 'seats.seat': seat.seat },

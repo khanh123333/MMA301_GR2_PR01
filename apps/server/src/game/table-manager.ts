@@ -102,6 +102,23 @@ export class Table {
     return this.doc;
   }
 
+  leave(userId: string): number {
+    if (this.hand && this.hand.street !== Street.Complete) {
+      throw AppError.conflict('Finish the current hand before leaving the table');
+    }
+
+    const seat = this.doc.seats.find((entry) => entry.userId?.toHexString() === userId);
+    if (!seat) throw AppError.badRequest('You are not seated at this table');
+
+    const refund = seat.stack;
+    seat.userId = null;
+    seat.displayName = null;
+    seat.stack = 0;
+    this.sequence += 1;
+    this.emitChange();
+    return refund;
+  }
+
   /** Returns an unsubscribe function. */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
