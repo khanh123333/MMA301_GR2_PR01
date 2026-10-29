@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
+import type { LegalActionView, PlayerActionBody } from '@app/shared';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { BetSlider } from './bet-slider';
 import { formatChips } from './chip-stack';
 
-export interface LegalAction {
-  type: 'fold' | 'check' | 'call' | 'bet' | 'raise';
-  min?: number;
-  max?: number;
-}
+export type LegalAction = LegalActionView;
+
+type BettingAction = PlayerActionBody['type'];
 
 export interface ActionBarProps {
   actions: LegalAction[];
@@ -25,7 +24,7 @@ export interface ActionBarProps {
   /** Chips needed to call. Zero when checking is free. */
   toCall: number;
   potSize: number;
-  onAct: (type: LegalAction['type'], amount: number) => void;
+  onAct: (type: BettingAction, amount: number) => void;
   disabled?: boolean;
   className?: string;
 }
@@ -234,7 +233,7 @@ export function ActionBar({
                 raise.max ?? amount,
                 Math.max(raise.min ?? amount, Math.round(amount)),
               );
-              onAct(raise.type, clamped);
+              onAct(raise.type === 'bet' ? 'bet' : 'raise', clamped);
             }}
             className="flex-1"
           />
