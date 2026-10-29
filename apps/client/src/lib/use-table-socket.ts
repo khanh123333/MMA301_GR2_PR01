@@ -48,6 +48,7 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
   const sequenceRef = useRef(0);
   const attemptRef = useRef(0);
   const handRef = useRef<string | null>(null);
+  const hasSnapshotRef = useRef(false);
 
   const send = useCallback((message: unknown) => {
     const socket = socketRef.current;
@@ -70,6 +71,7 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
     sequenceRef.current = 0;
     attemptRef.current = 0;
     handRef.current = null;
+    hasSnapshotRef.current = false;
     setState(null);
     setMessages([]);
     setDealing(false);
@@ -85,6 +87,10 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
       socketRef.current = socket;
 
       socket.onopen = () => {
+        if (cancelled) {
+          socket.close();
+          return;
+        }
         attemptRef.current = 0;
         setStatus('open');
         setError(null);
@@ -108,23 +114,35 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
       };
 
       socket.onmessage = (event) => {
+        if (cancelled || socketRef.current !== socket) return;
+
         let parsed: unknown;
         try {
           parsed = JSON.parse(String(event.data));
         } catch {
+          setError('Received an invalid table update');
           return;
         }
 
         const result = serverMessageSchema.safeParse(parsed);
-        if (!result.success) return;
+        if (!result.success) {
+          setError('Received an invalid table update');
+          return;
+        }
         const message = result.data;
 
         switch (message.type) {
           case 'table_state': {
             // Out-of-order or duplicate states are ignored rather than
             // applied, so a late broadcast cannot rewind the table.
-            if (message.sequence < sequenceRef.current) return;
+            if (
+              hasSnapshotRef.current &&
+              message.sequence <= sequenceRef.current
+            ) {
+              return;
+            }
             sequenceRef.current = message.sequence;
+            hasSnapshotRef.current = true;
 
             // A new hand id means cards were just dealt. Animate only then;
             // joining mid-hand should render immediately.
@@ -188,7 +206,7 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
       };
 
       socket.onerror = () => {
-        // onclose always follows, which is where reconnection is handled.
+        if (!cancelled) setError('Table connection failed; reconnecting');
       };
     };
 
