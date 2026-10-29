@@ -22,6 +22,8 @@ export interface PlayerSeatProps {
   dealing?: boolean;
   /** Seat position in the deal order, so cards arrive one seat at a time. */
   dealIndex?: number;
+  /** Number of table positions included in the deal order. */
+  dealOrderSize?: number;
   isActing?: boolean;
   isDealer?: boolean;
   isSelf?: boolean;
@@ -46,6 +48,7 @@ export function PlayerSeat({
   holeCards = [],
   dealing = false,
   dealIndex = 0,
+  dealOrderSize = 9,
   isActing = false,
   isDealer = false,
   isSelf = false,
@@ -95,7 +98,7 @@ export function PlayerSeat({
               size="sm"
               // Cards go round the table one per player per pass, the order a
               // real dealer uses, so the seat index decides the delay.
-              index={position * 6 + dealIndex}
+              index={position * dealOrderSize + dealIndex}
               stagger={55}
               fromY={-70}
               instant={!dealing}

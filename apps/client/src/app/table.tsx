@@ -221,6 +221,7 @@ export default function TableScreen() {
                   seat={seat}
                   dealing={dealing}
                   dealIndex={index}
+                  dealOrderSize={seats.length}
                   buttonSeat={state?.buttonSeat ?? null}
                   clockRemaining={seat.isActing ? clockRemaining : undefined}
                   onAddBot={canManageBots ? () => setAddingToSeat(seat.seat) : undefined}
@@ -245,6 +246,7 @@ export default function TableScreen() {
                   seat={seat}
                   dealing={dealing}
                   dealIndex={topSeats.length + index}
+                  dealOrderSize={seats.length}
                   buttonSeat={state?.buttonSeat ?? null}
                   clockRemaining={seat.isActing ? clockRemaining : undefined}
                   onAddBot={canManageBots ? () => setAddingToSeat(seat.seat) : undefined}
@@ -256,6 +258,7 @@ export default function TableScreen() {
                   seat={selfSeat}
                   dealing={dealing}
                   dealIndex={others.length}
+                  dealOrderSize={seats.length}
                   buttonSeat={state?.buttonSeat ?? null}
                   isSelf
                   clockRemaining={selfSeat.isActing ? clockRemaining : undefined}
@@ -317,6 +320,7 @@ function SeatCard({
   seat,
   dealing,
   dealIndex,
+  dealOrderSize,
   buttonSeat,
   isSelf = false,
   clockRemaining,
@@ -325,6 +329,7 @@ function SeatCard({
   seat: SeatView;
   dealing: boolean;
   dealIndex: number;
+  dealOrderSize: number;
   buttonSeat: number | null;
   isSelf?: boolean;
   clockRemaining?: number;
@@ -351,6 +356,7 @@ function SeatCard({
       holeCards={holeCards}
       dealing={dealing}
       dealIndex={dealIndex}
+      dealOrderSize={dealOrderSize}
       isActing={seat.isActing}
       isDealer={buttonSeat === seat.seat}
       isSelf={isSelf}

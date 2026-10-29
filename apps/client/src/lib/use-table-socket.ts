@@ -159,7 +159,7 @@ export function useTableSocket(tableId: string | null, token: string | null): Us
               // Long enough for the stagger to finish; after this the cards
               // are static so later renders do not re-animate them.
               if (dealTimer) clearTimeout(dealTimer);
-              dealTimer = setTimeout(() => setDealing(false), 1200);
+              dealTimer = setTimeout(() => setDealing(false), 1500);
             }
             return;
           }
